@@ -1,4 +1,4 @@
-# Tartancloth
+# TartanCloth
 
 A wrapper around the BlueCloth gem which incorporates HTML5 headers, footers,
 and a table of contents all with a nice stylesheet.
@@ -91,6 +91,7 @@ include a Table of Contents.
 
     TartanCloth.new( mdsrc, title ).to_html_file( mdout )
 
+- - -
 ### Using TartanCloth from a Rake Task
 
 I like to use TartanCloth from a rake task to generate pretty docs.
@@ -163,6 +164,7 @@ I like to use TartanCloth from a rake task to generate pretty docs.
 
     end # namespace :markdown
 
+- - -
 ### A Task to Generate a User Manual
 
 I use the tasks above to generate a user manual as well:
@@ -181,12 +183,14 @@ I use the tasks above to generate a user manual as well:
 
     end
 
+- - -
 ## Credits
 
 +   [BlueCloth](https://github.com/ged/bluecloth) is used to generate the markdown
 +   [Nokogiri](http://nokogiri.org/) is used to generate the table of contents
 +   Chris Coyier has some [great code for pretty HRs](http://css-tricks.com/examples/hrs/)
 
+- - -
 ## Contributing
 
 1. Fork it
