@@ -3,6 +3,7 @@
 A wrapper around the BlueCloth gem which incorporates HTML5 headers, footers,
 and a table of contents all with a nice stylesheet.
 
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -17,9 +18,10 @@ Or install it yourself as:
 
     $ gem install tartancloth
 
+
 ## Usage
 
-TartanCloth's main feature is that it generates a _linked_ Table of Contents
+TartanCloth's main feature is generating a _linked_ Table of Contents
 from the headers (`h1, h2, h3, h4, h5, h6`) in your markdown document.
 
 Simply add a header at any header level (level 2: `h2`, shown here):
@@ -34,11 +36,13 @@ In most of my documents, I include the Title (h1) and a summary before
 displaying the TOC. I didn't want to include the sections prior to the TOC in
 the Table of Contents, that's why header collection starts after.
 
+
 ### Quick Example
 
 A quick example of using TartanCloth.
 
 Given the following markdown:
+
 
 ###### markdown.md
 
@@ -91,7 +95,7 @@ include a Table of Contents.
 
     TartanCloth.new( mdsrc, title ).to_html_file( mdout )
 
-- - -
+
 ### Using TartanCloth from a Rake Task
 
 I like to use TartanCloth from a rake task to generate pretty docs.
@@ -164,10 +168,11 @@ I like to use TartanCloth from a rake task to generate pretty docs.
 
     end # namespace :markdown
 
-- - -
+
 ### A Task to Generate a User Manual
 
 I use the tasks above to generate a user manual as well:
+
 
 ###### Rakefile
 
@@ -183,14 +188,46 @@ I use the tasks above to generate a user manual as well:
 
     end
 
-- - -
+
+### Available Methods
+
+The TartanCloth object provides the following methods:
+
+    ###
+    # Convert a markdown source file to HTML. If a header element with text TOC
+    # exists within the markdown document, a Table of Contents will be generated
+    # and inserted at that location.
+    #
+    # The TOC will only contain header (h1-h6) elements from the location of the
+    # TOC header to the end of the document
+
+    to_html()
+
+
+    ###
+    # The same as to_html() but writes the HTML to a file.
+    #
+    # html_file - path to file
+
+    to_html_file( html_file_path )
+
+
+    ###
+    # Build TOC and return body content (including TOC).
+    # Returned HTML does NOT include doc headers, footer, or stylesheet.
+    #
+    # returns HTML that forms the body of the document
+
+    body_html()
+
+
 ## Credits
 
 +   [BlueCloth](https://github.com/ged/bluecloth) is used to generate the markdown
 +   [Nokogiri](http://nokogiri.org/) is used to generate the table of contents
 +   Chris Coyier has some [great code for pretty HRs](http://css-tricks.com/examples/hrs/)
 
-- - -
+
 ## Contributing
 
 1. Fork it

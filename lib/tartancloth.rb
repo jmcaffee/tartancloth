@@ -5,20 +5,13 @@ require 'nokogiri'
 
 class TartanCloth
 
-  VERSION = "0.0.1"
+  VERSION = "0.0.2"
 
   attr_accessor :title
 
   def initialize( markdown_file, title = nil )
     @markdown_file = markdown_file
     @title = title
-  end
-
-  def to_html_file( html_file )
-
-    File.open( html_file, 'w') do |f|
-      f << to_html()
-    end
   end
 
   ###
@@ -29,22 +22,42 @@ class TartanCloth
   # The TOC will only contain header (h1-h6) elements from the location of the
   # TOC header to the end of the document
   def to_html
-    bc = BlueCloth::new( File::read( @markdown_file ), header_labels: true )
-    content = bc.to_html
-
-    content = build_toc( content )
-
     html = ""
 
     # Add a well formed HTML5 header.
     html << html_header(title)
 
     # Add the body content.
-    html << content
+    html << body_html()
 
     # Add the document closing tags.
     html << html_footer()
   end
+
+  ###
+  # The same as to_html() but writes the HTML to a file.
+  #
+  # html_file - path to file
+  def to_html_file( html_file )
+
+    File.open( html_file, 'w') do |f|
+      f << to_html()
+    end
+  end
+
+  ###
+  # Build TOC and return body content (including TOC).
+  # Returned HTML does NOT include doc headers, footer, or stylesheet.
+  #
+  # returns HTML that forms the body of the document
+  def body_html
+    bc = BlueCloth::new( File::read( @markdown_file ), header_labels: true )
+    body = bc.to_html
+
+    body = build_toc( body )
+  end
+
+  private
 
   ###
   # Build a TOC based on headers located within HTML content.
@@ -56,6 +69,9 @@ class TartanCloth
   def build_toc( html_content )
     # Generate Nokogiri elements from HTML
     doc = Nokogiri::HTML::DocumentFragment.parse( html_content )
+
+    # Make sure all header anchors are unique.
+    make_header_anchors_unique(doc)
 
     # Find the TOC header
     toc = find_toc_header(doc)
@@ -141,11 +157,12 @@ class TartanCloth
   # Create an array of all header (h1-h6) elements in an HTML document
   # starting from a specific element
   #
-  # starting_element - element to start parsing from
+  # starting_element - element to start parsing from, if starting element is
+  #                    nil, all headers will be collected.
   # returns - array of Nokogiri elements
-  def get_headers(doc, starting_element)
+  def get_headers(doc, starting_element = nil)
     headers = []
-    capture = false
+    capture = (starting_element.nil? ? true : false)
 
     doc.children.each do |element|
       unless capture
@@ -165,13 +182,78 @@ class TartanCloth
   #
   # element - Nokogiri element
   def link_hash(element)
-    # The previous element should be a simple anchor.
-    # Get the actual link value from the anchor.
-    a = element.previous_element
-    anchor_link = a.attributes['name'].value if a.name == 'a'
+    anchor = get_anchor_for_header(element)
+    anchor_link = get_link(anchor)
 
     # Store the header text (link text) and the anchor link and a class for styling.
     { text: element.text, link: anchor_link, klass: "#{element.name}toc" }
+  end
+
+  ###
+  # Return the previous element which should be an anchor
+  def get_anchor_for_header(element)
+    # The previous element should be a simple anchor.
+    # Get the actual link value from the anchor.
+    anchor = element.previous_element
+    anchor = nil unless anchor.name == 'a'
+    anchor
+  end
+
+  ###
+  # Return the link from an element, if it's an anchor
+  # returns "" otherwise
+  #
+  # anchor - Nokogiri::Node
+  def get_link(anchor)
+    link = ""
+    link = anchor.attributes['name'].value if anchor.name == 'a'
+    link
+  end
+
+  ###
+  # Sets an anchor's link to a value.
+  # Does nothing if element isn't an anchor.
+  #
+  # anchor - Nokogiri::Node
+  # link - link text to set on anchor
+  def set_link(anchor, link)
+    anchor.attributes['name'].value = link if anchor.name == 'a'
+  end
+
+  ###
+  # Identical headers will have identical anchors. Modify them so each anchor
+  # is unique.
+  def make_header_anchors_unique(doc)
+    headers = get_headers(doc)
+
+    # Get anchors for each header.
+    anchors = []
+    headers.each do |h|
+      anchors << get_anchor_for_header(h)
+    end
+
+    anchor_collection = {}
+    anchors.each do |a|
+      # Get the link
+      link = get_link(a)
+
+      # Get the current link count, will be nil if it's the first time.
+      link_count = anchor_collection[link]
+
+      if link_count.nil?
+        # First time we've seen this link
+        link_count = 0
+
+        # Store it in the collection
+        anchor_collection[link] = link_count
+      else
+        # Link already exists, modify it (add .#)
+        set_link(a, "#{link}.#{link_count}")
+
+        # Update the count for the next time we find this link
+        anchor_collection[link] = link_count + 1
+      end # if
+    end
   end
 
   # Create an HTML5 header

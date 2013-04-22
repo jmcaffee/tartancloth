@@ -1,0 +1,9 @@
+v0.0.2 Apr 21 2013
+
+		Modify header anchors so each is unique.
+
+		Add specs for unique headers
+
+v0.0.1 Apr 20 2013
+
+		Initial Commit
